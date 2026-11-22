@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center — Личный дашборд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #090d0c;
+    --bg-gradient: radial-gradient(circle at 15% 15%, rgba(16, 46, 38, 0.45) 0%, rgba(9, 13, 12, 0.95) 55%),
+                   radial-gradient(circle at 85% 85%, rgba(20, 38, 48, 0.4) 0%, rgba(9, 13, 12, 1) 60%);
+    --card-bg: rgba(18, 24, 23, 0.78);
+    --card-bg-hover: rgba(24, 32, 30, 0.85);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-border-hover: rgba(255, 255, 255, 0.16);
+    --text-main: #edf2f0;
+    --text-muted: #869691;
+    --text-dim: #54635e;
+    --accent-green: #22c55e;
+    --accent-teal: #14b8a6;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-purple: #a855f7;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-base);
+    background-image: var(--bg-gradient);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Main Bento Grid */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1.15fr 0.95fr 1.15fr;
+    gap: 16px;
+    width: 100vw;
+    height: 100vh;
+    padding: 16px;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    min-height: 0;
+  }
+
+  .card:hover {
+    border-color: var(--card-border-hover);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+
+  .card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 13px;
+  }
+
+  .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+  }
+
+  .text-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .text-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+  }
+
+  /* ==================== LEFT COLUMN ==================== */
+  .tasks-card {
+    flex: 1.65;
+  }
+
+  .tasks-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background-color 0.15s ease;
+    group: task;
+  }
+
+  .task-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .task-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-dim);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .task-checkbox:hover {
+    border-color: var(--accent-green);
+  }
+
+  .task-item.done .task-checkbox {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+  }
+
+  .task-item.done .task-checkbox::after {
+    content: '✓';
+    color: #05140b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .priority-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+
+  .priority-dot:hover {
+    transform: scale(1.4);
+  }
+
+  .task-item.priority .priority-dot {
+    background: var(--accent-orange);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  }
+
+  .task-text {
+    flex: 1;
+    font-size: 13.5px;
+    color: var(--text-main);
+    line-height: 1.35;
+    word-break: break-word;
+    user-select: text;
+  }
+
+  .task-item.done .task-text {
+    text-decoration: line-through;
+    color: var(--text-dim);
+  }
+
+  .task-date-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .task-del {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: opacity 0.15s, color 0.15s;
+  }
+
+  .task-item:hover .task-del {
+    opacity: 1;
+  }
+
+  .task-del:hover {
+    color: var(--accent-red);
+  }
+
+  .overdue-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .overdue-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent-orange);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+
+  .overdue-header:hover {
+    background: rgba(245, 158, 11, 0.08);
+  }
+
+  .task-input-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .task-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .task-input:focus {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .task-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Routine Card */
+  .routine-card {
+    flex: 1;
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-teal), var(--accent-green));
+    width: 0%;
+    transition: width 0.25s ease;
+  }
+
+  .routine-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    overflow-y: auto;
+  }
+
+  .routine-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+
+  .routine-pill:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-main);
+  }
+
+  .routine-pill.checked {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: var(--text-main);
+  }
+
+  .routine-check-box {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    border: 1.5px solid var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .routine-pill.checked .routine-check-box {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: #05140b;
+    font-weight: 700;
+  }
+
+  /* ==================== CENTER COLUMN ==================== */
+  .launcher-card {
+    flex: 1.15;
+    justify-content: space-between;
+  }
+
+  .big-tiles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .big-tile {
+    flex: 1;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 76px;
+  }
+
+  .big-tile:hover {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .big-tile-code {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .big-tile-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .mini-tiles-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .mini-tile {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .mini-tile:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.06);
+  }
+
+  /* Note Card */
+  .note-card {
+    flex: 0.95;
+  }
+
+  .note-textarea {
+    flex: 1;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    user-select: text;
+    transition: border-color 0.15s;
+  }
+
+  .note-textarea:focus {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .note-textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Clock / Cities Card */
+  .clock-card {
+    flex: 0.9;
+    justify-content: space-between;
+  }
+
+  .main-clock-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .main-time {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--text-main);
+  }
+
+  .main-seconds {
+    font-size: 16px;
+    color: var(--accent-teal);
+    font-weight: 500;
+  }
+
+  .cities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .city-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    font-size: 12.5px;
+  }
+
+  .city-name {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .city-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-teal);
+  }
+
+  .city-time {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  /* ==================== RIGHT COLUMN ==================== */
+  .heatmap-card {
+    flex: 1.3;
+  }
+
+  .heatmap-wrapper {
+    display: flex;
+    gap: 14px;
+    flex: 1;
+    align-items: center;
+    min-height: 0;
+  }
+
+  .heatmap-grid-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .heatmap-months {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    padding-left: 22px;
+    margin-bottom: 2px;
+  }
+
+  .heatmap-body {
+    display: flex;
+    gap: 6px;
+  }
+
+  .heatmap-weekdays {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 2px 0;
+  }
+
+  .heatmap-cells {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .hm-cell {
+    aspect-ratio: 1 / 1;
+    min-width: 18px;
+    max-width: 24px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, border-color 0.15s;
+  }
+
+  .hm-cell:hover {
+    transform: scale(1.15);
+    border-color: #fff;
+    z-index: 2;
+  }
+
+  .hm-cell.today {
+    box-shadow: 0 0 0 1.5px #fff;
+  }
+
+  .hm-cell.future {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  /* Mood Colors */
+  .mood-1 { background: rgba(239, 68, 68, 0.78); color: #fff; border-color: rgba(239, 68, 68, 0.9); }
+  .mood-2 { background: rgba(245, 158, 11, 0.78); color: #fff; border-color: rgba(245, 158, 11, 0.9); }
+  .mood-3 { background: rgba(34, 197, 94, 0.78); color: #05140b; font-weight: 700; border-color: rgba(34, 197, 94, 0.9); }
+  .mood-4 { background: rgba(20, 184, 166, 0.82); color: #041412; font-weight: 700; border-color: rgba(20, 184, 166, 0.95); }
+  .mood-5 { background: rgba(168, 85, 247, 0.82); color: #fff; font-weight: 700; border-color: rgba(168, 85, 247, 0.95); }
+
+  .heatmap-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 95px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .legend-count {
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  /* Bottom Right Split: Sleep & Day Counter */
+  .bottom-right-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .stat-big-value {
+    font-family: var(--font-mono);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 4px 0;
+  }
+
+  .stat-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .sleep-pills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    margin-top: auto;
+  }
+
+  .sleep-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .sleep-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+  }
+
+  .sleep-btn.active {
+    background: rgba(20, 184, 166, 0.22);
+    border-color: var(--accent-teal);
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  .streak-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+  }
+
+  .action-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal-backdrop.open {
+    display: flex;
+  }
+
+  .modal-box {
+    background: #121817;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    padding: 22px;
+    width: 420px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .modal-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .modal-row {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #182220;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 12.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 200;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- LEFT COLUMN -->
+  <div class="column">
+    <div class="card tasks-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-subtitle" id="currentDateLabel">Понедельник</span>
+          <div class="card-title">
+            Задачи на сегодня <span class="badge-count" id="activeTasksCount">0</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="text-btn" id="closeDayBtn" title="Перенести невыполненные в просроченные и сбросить рутину">закрыть день ›</button>
+          <button class="icon-btn" id="backupBtn" title="Экспорт / Импорт данных (JSON)">💾</button>
+        </div>
+      </div>
+
+      <div class="tasks-scroll" id="tasksContainer">
+        <div id="todayTasksList"></div>
+
+        <div class="overdue-section" id="overdueSection" style="display:none;">
+          <div class="overdue-header" id="overdueToggle">
+            <span>!</span>
+            <span>Просрочено</span>
+            <span class="badge-count" id="overdueCount">0</span>
+          </div>
+          <div id="overdueTasksList"></div>
+        </div>
+      </div>
+
+      <div class="task-input-row">
+        <input type="text" class="task-input" id="newTaskInput" placeholder="+ Добавить задачу (Enter)..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="card routine-card">
+      <div class="card-header">
+        <div class="card-title">
+          Ежедневная рутина <span class="badge-count" id="routineProgressText">0 / 0</span>
+        </div>
+        <button class="icon-btn" id="editRoutineBtn" title="Настроить пункты рутины">⚙️</button>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="routineProgressBar"></div>
+      </div>
+      <div class="routine-grid" id="routineGrid"></div>
+    </div>
+  </div>
+
+  <!-- CENTER COLUMN -->
+  <div class="column">
+    <div class="card launcher-card">
+      <div class="card-header" style="margin-bottom: 10px;">
+        <div class="card-title">Быстрый доступ</div>
+        <button class="icon-btn" id="editLinksBtn" title="Настроить ссылки">⚙️</button>
+      </div>
+      <div class="big-tiles" id="bigTilesContainer"></div>
+      <div class="mini-tiles-row" id="miniTilesContainer"></div>
+    </div>
+
+    <div class="card note-card">
+      <div class="card-header" style="margin-bottom: 10px;">
+        <div class="card-title">Заметка / Фокус дня</div>
+        <span class="card-subtitle" id="noteSavedStatus">автосохранение</span>
+      </div>
+      <textarea class="note-textarea" id="dailyNoteArea" placeholder="Главная мысль, планы на завтра или итоги дня..."></textarea>
+    </div>
+
+    <div class="card clock-card">
+      <div class="card-header" style="margin-bottom: 4px;">
+        <div class="card-title">Время и города</div>
+        <button class="icon-btn" id="editCitiesBtn" title="Настроить часовые пояса">⚙️</button>
+      </div>
+      <div class="main-clock-row">
+        <div>
+          <span class="main-time" id="localClockHM">00:00</span><span class="main-seconds" id="localClockS">:00</span>
+        </div>
+        <span class="card-subtitle" id="localTimezoneLabel">Локальное</span>
+      </div>
+      <div class="cities-list" id="citiesList"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="column">
+    <div class="card heatmap-card">
+      <div class="card-header">
+        <div class="card-title">Календарь дней</div>
+        <span class="card-subtitle">клик по ячейке — статус дня</span>
+      </div>
+      <div class="heatmap-wrapper">
+        <div class="heatmap-grid-area">
+          <div class="heatmap-months" id="heatmapMonths"></div>
+          <div class="heatmap-body">
+            <div class="heatmap-weekdays">
+              <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+            </div>
+            <div class="heatmap-cells" id="heatmapCells"></div>
+          </div>
+        </div>
+        <div class="heatmap-legend" id="heatmapLegend"></div>
+      </div>
+    </div>
+
+    <div class="bottom-right-split">
+      <div class="card">
+        <div class="card-header" style="margin-bottom: 6px;">
+          <div class="card-title">Сон</div>
+          <span class="badge-count" id="sleepAvgBadge">ср. —</span>
+        </div>
+        <div class="stat-big-value" id="sleepTodayVal">—</div>
+        <div class="stat-sub" id="sleepSubLabel">часов за последнюю ночь</div>
+        <div class="sleep-pills" id="sleepPills"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="margin-bottom: 6px;">
+          <div class="card-title" id="streakTitleLabel">День</div>
+          <button class="icon-btn" id="editStreakBtn" title="Настроить счетчик">⚙️</button>
+        </div>
+        <div class="stat-big-value" id="streakValue">День 1</div>
+        <div class="stat-sub" id="streakSubLabel">активная серия</div>
+        <div class="streak-actions">
+          <button class="action-btn" id="streakPlusBtn">+1 день</button>
+          <button class="icon-btn" id="streakResetBtn" title="Сбросить на 1">↺</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<div class="toast" id="toast">Сохранено</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'personal_pc_dashboard_v1';
+
+  const DEFAULT_STATE = {
+    tasks: [],
+    overdue: [],
+    routine: [
+      { id: 'r1', text: 'Зарядка / разминка', done: false },
+      { id: 'r2', text: 'Стакан воды утром', done: false },
+      { id: 'r3', text: 'Фокус-блок 2 часа', done: false },
+      { id: 'r4', text: 'Порядок на столе', done: false }
+    ],
+    bigLinks: [
+      { code: 'YT', name: 'YouTube', url: 'https://www.youtube.com' },
+      { code: 'TW', name: 'Twitch', url: 'https://www.twitch.tv' }
+    ],
+    miniLinks: [
+      { code: 'TG', name: 'Telegram', url: 'https://web.telegram.org' },
+      { code: 'GH', name: 'GitHub', url: 'https://github.com' },
+      { code: 'SP', name: 'Spotify', url: 'https://open.spotify.com' },
+      { code: 'DS', name: 'Discord', url: 'https://discord.com/app' },
+      { code: 'RD', name: 'Reddit', url: 'https://www.reddit.com' },
+      { code: 'AI', name: 'Gemini', url: 'https://gemini.google.com' }
+    ],
+    note: '',
+    cities: [
+      { name: 'Санкт-Петербург', tz: 'Europe/Moscow' },
+      { name: 'Токио', tz: 'Asia/Tokyo' },
+      { name: 'Нью-Йорк', tz: 'America/New_York' }
+    ],
+    moods: {}, // 'YYYY-MM-DD': 1..5
+    sleep: {}, // 'YYYY-MM-DD': number
+    streak: {
+      title: 'Серия',
+      mode: 'manual', // 'manual' | 'date'
+      count: 1,
+      startDate: new Date().toISOString().slice(0, 10)
+    }
+  };
+
+  let state = loadState();
+  let overdueCollapsed = false;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(DEFAULT_STATE);
+      const parsed = JSON.parse(raw);
+      return {
+        ...structuredClone(DEFAULT_STATE),
+        ...parsed,
+        streak: { ...DEFAULT_STATE.streak, ...(parsed.streak || {}) }
+      };
+    } catch (e) {
+      return structuredClone(DEFAULT_STATE);
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  function getTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function formatShortDate(isoStr) {
+    if (!isoStr) return '';
+    const [y, m, d] = isoStr.split('-');
+    const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]}`;
+  }
+
+  /* ==================== DATE HEADER ==================== */
+  function renderHeaderDate() {
+    const now = new Date();
+    const formatted = now.toLocaleDateString('ru-RU', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+    document.getElementById('currentDateLabel').textContent = formatted;
+  }
+
+  /* ==================== TASKS ==================== */
+  function renderTasks() {
+    const todayList = document.getElementById('todayTasksList');
+    const overdueList = document.getElementById('overdueTasksList');
+    const overdueSection = document.getElementById('overdueSection');
+
+    todayList.innerHTML = '';
+    overdueList.innerHTML = '';
+
+    const activeCount = state.tasks.filter(t => !t.done).length + state.overdue.filter(t => !t.done).length;
+    document.getElementById('activeTasksCount').textContent = activeCount;
+
+    state.tasks.forEach(task => {
+      todayList.appendChild(createTaskElement(task, false));
+    });
+
+    if (state.overdue.length > 0) {
+      overdueSection.style.display = 'block';
+      document.getElementById('overdueCount').textContent = state.overdue.length;
+      overdueList.style.display = overdueCollapsed ? 'none' : 'block';
+      state.overdue.forEach(task => {
+        overdueList.appendChild(createTaskElement(task, true));
+      });
+    } else {
+      overdueSection.style.display = 'none';
+    }
+  }
+
+  function createTaskElement(task, isOverdue) {
+    const row = document.createElement('div');
+    row.className = 'task-item' + (task.done ? ' done' : '') + (task.priority ? ' priority' : '');
+
+    const cb = document.createElement('div');
+    cb.className = 'task-checkbox';
+    cb.addEventListener('click', () => {
+      task.done = !task.done;
+      saveState();
+      renderTasks();
+    });
+
+    const dot = document.createElement('div');
+    dot.className = 'priority-dot';
+    dot.title = 'Важность';
+    dot.addEventListener('click', () => {
+      task.priority = !task.priority;
+      saveState();
+      renderTasks();
+    });
+
+    const text = document.createElement('div');
+    text.className = 'task-text';
+    text.textContent = task.text;
+
+    row.appendChild(cb);
+    row.appendChild(dot);
+    row.appendChild(text);
+
+    if (isOverdue && task.createdAt) {
+      const dateTag = document.createElement('span');
+      dateTag.className = 'task-date-tag';
+      dateTag.textContent = formatShortDate(task.createdAt);
+      row.appendChild(dateTag);
+    }
+
+    const del = document.createElement('button');
+    del.className = 'task-del';
+    del.textContent = '✕';
+    del.title = 'Удалить';
+    del.addEventListener('click', () => {
+      if (isOverdue) {
+        state.overdue = state.overdue.filter(t => t.id !== task.id);
+      } else {
+        state.tasks = state.tasks.filter(t => t.id !== task.id);
+      }
+      saveState();
+      renderTasks();
+    });
+
+    row.appendChild(del);
+    return row;
+  }
+
+  document.getElementById('newTaskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = e.target.value.trim();
+      if (!val) return;
+      state.tasks.push({
+        id: 't_' + Date.now(),
+        text: val,
+        done: false,
+        priority: false,
+        createdAt: getTodayKey()
+      });
+      e.target.value = '';
+      saveState();
+      renderTasks();
+    }
+  });
+
+  document.getElementById('overdueToggle').addEventListener('click', () => {
+    overdueCollapsed = !overdueCollapsed;
+    renderTasks();
+  });
+
+  document.getElementById('closeDayBtn').addEventListener('click', () => {
+    // Remove completed tasks, move uncompleted today tasks to overdue
+    const uncompleted = state.tasks.filter(t => !t.done);
+    state.overdue = [
+      ...state.overdue.filter(t => !t.done),
+      ...uncompleted
+    ];
+    state.tasks = [];
+    // Reset routine
+    state.routine.forEach(r => r.done = false);
+    saveState();
+    renderTasks();
+    renderRoutine();
+    showToast('День закрыт: рутина сброшена');
+  });
+
+  /* ==================== ROUTINE ==================== */
+  function renderRoutine() {
+    const grid = document.getElementById('routineGrid');
+    grid.innerHTML = '';
+
+    const total = state.routine.length;
+    const doneCount = state.routine.filter(r => r.done).length;
+    document.getElementById('routineProgressText').textContent = `${doneCount} / ${total}`;
+    const pct = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+    document.getElementById('routineProgressBar').style.width = pct + '%';
+
+    state.routine.forEach(item => {
+      const pill = document.createElement('div');
+      pill.className = 'routine-pill' + (item.done ? ' checked' : '');
+
+      const box = document.createElement('div');
+      box.className = 'routine-check-box';
+      box.textContent = item.done ? '✓' : '';
+
+      const lbl = document.createElement('span');
+      lbl.textContent = item.text;
+
+      pill.appendChild(box);
+      pill.appendChild(lbl);
+
+      pill.addEventListener('click', () => {
+        item.done = !item.done;
+        saveState();
+        renderRoutine();
+      });
+
+      grid.appendChild(pill);
+    });
+  }
+
+  /* ==================== QUICK LINKS ==================== */
+  function renderLinks() {
+    const bigContainer = document.getElementById('bigTilesContainer');
+    const miniContainer = document.getElementById('miniTilesContainer');
+    bigContainer.innerHTML = '';
+    miniContainer.innerHTML = '';
+
+    state.bigLinks.forEach(link => {
+      const a = document.createElement('a');
+      a.className = 'big-tile';
+      a.href = link.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+
+      const code = document.createElement('div');
+      code.className = 'big-tile-code';
+      code.textContent = link.code;
+
+      const name = document.createElement('div');
+      name.className = 'big-tile-name';
+      name.textContent = link.name;
+
+      a.appendChild(code);
+      a.appendChild(name);
+      bigContainer.appendChild(a);
+    });
+
+    state.miniLinks.forEach(link => {
+      const a = document.createElement('a');
+      a.className = 'mini-tile';
+      a.href = link.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.title = link.name;
+      a.textContent = link.code;
+      miniContainer.appendChild(a);
+    });
+  }
+
+  /* ==================== DAILY NOTE ==================== */
+  const noteArea = document.getElementById('dailyNoteArea');
+  noteArea.value = state.note || '';
+  noteArea.addEventListener('input', () => {
+    state.note = noteArea.value;
+    saveState();
+    const status = document.getElementById('noteSavedStatus');
+    status.textContent = 'сохранено';
+    clearTimeout(status._t);
+    status._t = setTimeout(() => status.textContent = 'автосохранение', 1200);
+  });
+
+  /* ==================== CLOCKS ==================== */
+  function updateClocks() {
+    const now = new Date();
+    const hm = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const sec = ':' + String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('localClockHM').textContent = hm;
+    document.getElementById('localClockS').textContent = sec;
+
+    const citiesList = document.getElementById('citiesList');
+    citiesList.innerHTML = '';
+    state.cities.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'city-row';
+
+      const left = document.createElement('div');
+      left.className = 'city-name';
+      const dot = document.createElement('span');
+      dot.className = 'city-dot';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = c.name;
+      left.appendChild(dot);
+      left.appendChild(nameSpan);
+
+      const right = document.createElement('div');
+      right.className = 'city-time';
+      try {
+        right.textContent = now.toLocaleTimeString('ru-RU', {
+          timeZone: c.tz,
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        right.textContent = '--:--';
+      }
+
+      row.appendChild(left);
+      row.appendChild(right);
+      citiesList.appendChild(row);
+    });
+  }
+
+  /* ==================== HEATMAP (13 WEEKS / ~3 MONTHS) ==================== */
+  const MOOD_META = [
+    { id: 0, label: 'Пусто', color: 'rgba(255,255,255,0.08)' },
+    { id: 1, label: 'Плохо', color: '#ef4444' },
+    { id: 2, label: 'Норм', color: '#f59e0b' },
+    { id: 3, label: 'Хорошо', color: '#22c55e' },
+    { id: 4, label: 'Отлично', color: '#14b8a6' },
+    { id: 5, label: 'Продуктивно', color: '#a855f7' }
+  ];
+
+  function renderHeatmap() {
+    const cellsContainer = document.getElementById('heatmapCells');
+    const monthsContainer = document.getElementById('heatmapMonths');
+    const legendContainer = document.getElementById('heatmapLegend');
+
+    cellsContainer.innerHTML = '';
+    monthsContainer.innerHTML = '';
+    legendContainer.innerHTML = '';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayKey = getTodayKey();
+
+    // Find Monday of current week
+    const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0 .. Sun=6
+    const currentMonday = new Date(today);
+    currentMonday.setDate(today.getDate() - dayOfWeek);
+
+    const weeksCount = 13;
+    const startMonday = new Date(currentMonday);
+    startMonday.setDate(currentMonday.getDate() - (weeksCount - 1) * 7);
+
+    const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    let lastMonth = -1;
+
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    for (let w = 0; w < weeksCount; w++) {
+      const weekMonday = new Date(startMonday);
+      weekMonday.setDate(startMonday.getDate() + w * 7);
+
+      const mLabel = document.createElement('span');
+      if (weekMonday.getMonth() !== lastMonth) {
+        mLabel.textContent = monthNames[weekMonday.getMonth()];
+        lastMonth = weekMonday.getMonth();
+      }
+      monthsContainer.appendChild(mLabel);
+
+      for (let d = 0; d < 7; d++) {
+        const cellDate = new Date(weekMonday);
+        cellDate.setDate(weekMonday.getDate() + d);
+
+        const y = cellDate.getFullYear();
+        const m = String(cellDate.getMonth() + 1).padStart(2, '0');
+        const day = String(cellDate.getDate()).padStart(2, '0');
+        const key = `${y}-${m}-${day}`;
+
+        const mood = state.moods[key] || 0;
+        if (mood > 0) counts[mood]++;
+
+        const cell = document.createElement('div');
+        cell.className = 'hm-cell' + (mood ? ` mood-${mood}` : '') + (key === todayKey ? ' today' : '');
+        if (cellDate > today) {
+          cell.classList.add('future');
+        }
+        cell.textContent = cellDate.getDate();
+        cell.title = `${key}${mood ? ' — ' + MOOD_META[mood].label : ''}`;
+
+        cell.addEventListener('click', () => {
+          const next = ((state.moods[key] || 0) + 1) % 6;
+          if (next === 0) {
+            delete state.moods[key];
+          } else {
+            state.moods[key] = next;
+          }
+          saveState();
+          renderHeatmap();
+        });
+
+        cellsContainer.appendChild(cell);
+      }
+    }
+
+    MOOD_META.slice(1).forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+
+      const left = document.createElement('div');
+      left.className = 'legend-left';
+      const dot = document.createElement('span');
+      dot.className = 'legend-dot';
+      dot.style.background = m.color;
+      const lbl = document.createElement('span');
+      lbl.textContent = m.label;
+      left.appendChild(dot);
+      left.appendChild(lbl);
+
+      const cnt = document.createElement('span');
+      cnt.className = 'legend-count';
+      cnt.textContent = counts[m.id];
+
+      item.appendChild(left);
+      item.appendChild(cnt);
+      legendContainer.appendChild(item);
+    });
+  }
+
+  /* ==================== SLEEP ==================== */
+  function renderSleep() {
+    const todayKey = getTodayKey();
+    const todayVal = state.sleep[todayKey];
+    document.getElementById('sleepTodayVal').textContent = todayVal !== undefined ? todayVal : '—';
+
+    // Average of last 7 recorded entries
+    const entries = Object.entries(state.sleep)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 7)
+      .map(e => Number(e[1]));
+
+    if (entries.length > 0) {
+      const avg = (entries.reduce((acc, v) => acc + v, 0) / entries.length).toFixed(1);
+      document.getElementById('sleepAvgBadge').textContent = `ср. ${avg}`;
+    } else {
+      document.getElementById('sleepAvgBadge').textContent = 'ср. —';
+    }
+
+    const pills = document.getElementById('sleepPills');
+    pills.innerHTML = '';
+    const options = [5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
+    options.forEach(hrs => {
+      const btn = document.createElement('button');
+      btn.className = 'sleep-btn' + (todayVal === hrs ? ' active' : '');
+      btn.textContent = hrs;
+      btn.addEventListener('click', () => {
+        if (state.sleep[todayKey] === hrs) {
+          delete state.sleep[todayKey];
+        } else {
+          state.sleep[todayKey] = hrs;
+        }
+        saveState();
+        renderSleep();
+      });
+      pills.appendChild(btn);
+    });
+  }
+
+  /* ==================== STREAK / DAY N ==================== */
+  function renderStreak() {
+    const s = state.streak;
+    document.getElementById('streakTitleLabel').textContent = s.title || 'День';
+
+    let days = s.count || 1;
+    if (s.mode === 'date' && s.startDate) {
+      const start = new Date(s.startDate + 'T00:00:00');
+      const now = new Date(getTodayKey() + 'T00:00:00');
+      const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+      days = Math.max(1, diff);
+      document.getElementById('streakSubLabel').textContent = `с ${formatShortDate(s.startDate)}`;
+      document.getElementById('streakPlusBtn').style.display = 'none';
+    } else {
+      document.getElementById('streakSubLabel').textContent = 'ручной счетчик';
+      document.getElementById('streakPlusBtn').style.display = 'inline-block';
+    }
+
+    document.getElementById('streakValue').textContent = `День ${days.toLocaleString('ru-RU')}`;
+  }
+
+  document.getElementById('streakPlusBtn').addEventListener('click', () => {
+    state.streak.count = (state.streak.count || 1) + 1;
+    saveState();
+    renderStreak();
+  });
+
+  document.getElementById('streakResetBtn').addEventListener('click', () => {
+    state.streak.count = 1;
+    state.streak.startDate = getTodayKey();
+    saveState();
+    renderStreak();
+    showToast('Счетчик сброшен на День 1');
+  });
+
+  /* ==================== MODALS ==================== */
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalBox = document.getElementById('modalBox');
+
+  function openModal(buildFn) {
+    modalBox.innerHTML = '';
+    buildFn(modalBox);
+    modalBackdrop.classList.add('open');
+  }
+
+  function closeModal() {
+    modalBackdrop.classList.remove('open');
+  }
+
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Backup Modal
+  document.getElementById('backupBtn').addEventListener('click', () => {
+    openModal(box => {
+      const title = document.createElement('div');
+      title.className = 'modal-title';
+      title.textContent = 'Резервная копия данных (JSON)';
+
+      const desc = document.createElement('div');
+      desc.style.fontSize = '12.5px';
+      desc.style.color = 'var(--text-muted)';
+      desc.textContent = 'Все данные хранятся локально в браузере. Скачай файл, чтобы сохранить прогресс или перенести в другой браузер.';
+
+      const exportBtn = document.createElement('button');
+      exportBtn.className = 'action-btn';
+      exportBtn.textContent = '⬇ Скачать бэкап (.json)';
+      exportBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dashboard-backup-${getTodayKey()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      const importLabel = document.createElement('label');
+      importLabel.className = 'action-btn';
+      importLabel.style.textAlign = 'center';
+      importLabel.textContent = '⬆ Загрузить бэкап (.json)';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.json';
+      fileInput.style.display = 'none';
+      fileInput.addEventListener('change', (ev) => {
+        const file = ev.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const imported = JSON.parse(reader.result);
+            state = { ...structuredClone(DEFAULT_STATE), ...imported };
+            saveState();
+            renderAll();
+            closeModal();
+            showToast('Бэкап успешно загружен');
+          } catch (err) {
+            showToast('Ошибка чтения JSON файла');
+          }
+        };
+        reader.readAsText(file);
+      });
+      importLabel.appendChild(fileInput);
+
+      const closeRow = document.createElement('div');
+      closeRow.className = 'modal-row';
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'text-btn';
+      closeBtn.textContent = 'Закрыть';
+      closeBtn.addEventListener('click', closeModal);
+      closeRow.appendChild(closeBtn);
+
+      box.append(title, desc, exportBtn, importLabel, closeRow);
+    });
+  });
+
+  // Edit Routine Modal
+  document.getElementById('editRoutineBtn').addEventListener('click', () => {
+    openModal(box => {
+      const title = document.createElement('div');
+      title.className = 'modal-title';
+      title.textContent = 'Настройка ежедневной рутины';
+
+      const field = document.createElement('div');
+      field.className = 'modal-field';
+      field.textContent = 'Каждый пункт с новой строки (до 6 пунктов):';
+
+      const ta = document.createElement('textarea');
+      ta.className = 'note-textarea';
+      ta.style.height = '130px';
+      ta.value = state.routine.map(r => r.text).join('
+');
+
+      const row = document.createElement('div');
+      row.className = 'modal-row';
+
+      const cancel = document.createElement('button');
+      cancel.className = 'text-btn';
+      cancel.textContent = 'Отмена';
+      cancel.addEventListener('click', closeModal);
+
+      const save = document.createElement('button');
+      save.className = 'action-btn';
+      save.style.flex = 'initial';
+      save.textContent = 'Сохранить';
+      save.addEventListener('click', () => {
+        const lines = ta.value.split('
+').map(s => s.trim()).filter(Boolean).slice(0, 6);
+        state.routine = lines.map((text, idx) => ({
+          id: 'r_' + idx,
+          text,
+          done: false
+        }));
+        saveState();
+        renderRoutine();
+        closeModal();
+      });
+
+      row.append(cancel, save);
+      box.append(title, field, ta, row);
+    });
+  });
+
+  // Edit Links Modal
+  document.getElementById('editLinksBtn').addEventListener('click', () => {
+    openModal(box => {
+      const title = document.createElement('div');
+      title.className = 'modal-title';
+      title.textContent = 'Настройка быстрых ссылок';
+
+      const f1 = document.createElement('div');
+      f1.className = 'modal-field';
+      f1.textContent = 'Крупные плитки (формат: КОД | Название | URL):';
+      const ta1 = document.createElement('textarea');
+      ta1.className = 'note-textarea';
+      ta1.style.height = '65px';
+      ta1.value = state.bigLinks.map(l => `${l.code} | ${l.name} | ${l.url}`).join('
+');
+
+      const f2 = document.createElement('div');
+      f2.className = 'modal-field';
+      f2.textContent = 'Нижние иконки (формат: КОД | Название | URL):';
+      const ta2 = document.createElement('textarea');
+      ta2.className = 'note-textarea';
+      ta2.style.height = '120px';
+      ta2.value = state.miniLinks.map(l => `${l.code} | ${l.name} | ${l.url}`).join('
+');
+
+      const row = document.createElement('div');
+      row.className = 'modal-row';
+      const cancel = document.createElement('button');
+      cancel.className = 'text-btn';
+      cancel.textContent = 'Отмена';
+      cancel.addEventListener('click', closeModal);
+
+      const save = document.createElement('button');
+      save.className = 'action-btn';
+      save.style.flex = 'initial';
+      save.textContent = 'Сохранить';
+      save.addEventListener('click', () => {
+        const parseLines = (txt, limit) => txt.split('
+')
+          .map(line => line.split('|').map(s => s.trim()))
+          .filter(parts => parts.length >= 3 && parts[2])
+          .slice(0, limit)
+          .map(([code, name, url]) => ({
+            code: code.slice(0, 3),
+            name,
+            url: url.startsWith('http') ? url : 'https://' + url
+          }));
+
+        state.bigLinks = parseLines(ta1.value, 2);
+        state.miniLinks = parseLines(ta2.value, 6);
+        saveState();
+        renderLinks();
+        closeModal();
+      });
+
+      row.append(cancel, save);
+      box.append(title, f1, ta1, f2, ta2, row);
+    });
+  });
+
+  // Edit Cities Modal
+  document.getElementById('editCitiesBtn').addEventListener('click', () => {
+    openModal(box => {
+      const title = document.createElement('div');
+      title.className = 'modal-title';
+      title.textContent = 'Часовые пояса городов';
+
+      const f = document.createElement('div');
+      f.className = 'modal-field';
+      f.textContent = 'Формат: Город | IANA Timezone (до 3 строк):';
+
+      const ta = document.createElement('textarea');
+      ta.className = 'note-textarea';
+      ta.style.height = '95px';
+      ta.value = state.cities.map(c => `${c.name} | ${c.tz}`).join('
+');
+
+      const hint = document.createElement('div');
+      hint.style.fontSize = '11px';
+      hint.style.color = 'var(--text-dim)';
+      hint.textContent = 'Примеры: Europe/Moscow, Europe/London, Asia/Tokyo, America/New_York';
+
+      const row = document.createElement('div');
+      row.className = 'modal-row';
+      const cancel = document.createElement('button');
+      cancel.className = 'text-btn';
+      cancel.textContent = 'Отмена';
+      cancel.addEventListener('click', closeModal);
+
+      const save = document.createElement('button');
+      save.className = 'action-btn';
+      save.style.flex = 'initial';
+      save.textContent = 'Сохранить';
+      save.addEventListener('click', () => {
+        state.cities = ta.value.split('
+')
+          .map(l => l.split('|').map(s => s.trim()))
+          .filter(p => p.length >= 2 && p[0] && p[1])
+          .slice(0, 3)
+          .map(([name, tz]) => ({ name, tz }));
+        saveState();
+        updateClocks();
+        closeModal();
+      });
+
+      row.append(cancel, save);
+      box.append(title, f, ta, hint, row);
+    });
+  });
+
+  // Edit Streak Modal
+  document.getElementById('editStreakBtn').addEventListener('click', () => {
+    openModal(box => {
+      const title = document.createElement('div');
+      title.className = 'modal-title';
+      title.textContent = 'Настройка счетчика дней';
+
+      const f1 = document.createElement('div');
+      f1.className = 'modal-field';
+      f1.textContent = 'Название счетчика:';
+      const inpTitle = document.createElement('input');
+      inpTitle.className = 'modal-input';
+      inpTitle.value = state.streak.title;
+
+      const f2 = document.createElement('div');
+      f2.className = 'modal-field';
+      f2.textContent = 'Режим подсчета:';
+      const sel = document.createElement('select');
+      sel.className = 'modal-input';
+      sel.innerHTML = `
+        <option value="manual">Ручной (кнопка +1 день)</option>
+        <option value="date">Автоматически от даты старта</option>
+      `;
+      sel.value = state.streak.mode;
+
+      const f3 = document.createElement('div');
+      f3.className = 'modal-field';
+      f3.textContent = 'Текущее число дней (для ручного) или Дата старта (ГГГГ-ММ-ДД):';
+      const inpVal = document.createElement('input');
+      inpVal.className = 'modal-input';
+      inpVal.value = state.streak.mode === 'date' ? state.streak.startDate : state.streak.count;
+
+      sel.addEventListener('change', () => {
+        inpVal.value = sel.value === 'date' ? (state.streak.startDate || getTodayKey()) : (state.streak.count || 1);
+      });
+
+      const row = document.createElement('div');
+      row.className = 'modal-row';
+      const cancel = document.createElement('button');
+      cancel.className = 'text-btn';
+      cancel.textContent = 'Отмена';
+      cancel.addEventListener('click', closeModal);
+
+      const save = document.createElement('button');
+      save.className = 'action-btn';
+      save.style.flex = 'initial';
+      save.textContent = 'Сохранить';
+      save.addEventListener('click', () => {
+        state.streak.title = inpTitle.value.trim() || 'День';
+        state.streak.mode = sel.value;
+        if (sel.value === 'date') {
+          state.streak.startDate = inpVal.value.trim() || getTodayKey();
+        } else {
+          state.streak.count = Math.max(1, parseInt(inpVal.value, 10) || 1);
+        }
+        saveState();
+        renderStreak();
+        closeModal();
+      });
+
+      row.append(cancel, save);
+      box.append(title, f1, inpTitle, f2, sel, f3, inpVal, row);
+    });
+  });
+
+  /* ==================== INIT ==================== */
+  function renderAll() {
+    renderHeaderDate();
+    renderTasks();
+    renderRoutine();
+    renderLinks();
+    noteArea.value = state.note || '';
+    updateClocks();
+    renderHeatmap();
+    renderSleep();
+    renderStreak();
+  }
+
+  renderAll();
+  setInterval(updateClocks, 1000);
+})();
+</script>
+</body>
+</html>
